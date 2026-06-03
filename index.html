@@ -518,6 +518,134 @@
   .slide.active .anim-d3 { animation-delay: 0.3s; opacity: 0; }
   .slide.active .anim-d4 { animation-delay: 0.4s; opacity: 0; }
   .slide.active .anim-d5 { animation-delay: 0.5s; opacity: 0; }
+
+  @media (max-width: 768px) {
+    .slide {
+      padding: 24px 20px 80px;
+      overflow-y: auto;
+      justify-content: flex-start;
+    }
+
+    .badge {
+      top: 10px;
+      right: 10px;
+      font-size: 10px;
+      padding: 6px 10px;
+      transform: rotate(4deg);
+    }
+
+    .nav-bar {
+      padding: 10px 16px;
+    }
+
+    .nav-bar button {
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+
+    .split,
+    .split-wide {
+      grid-template-columns: 1fr;
+      gap: 24px;
+      height: auto;
+    }
+
+    .triple {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    /* Hooks slide: keep 3 columns with scaled-down phones */
+    .slide[data-slide="3"] > div {
+      height: auto !important;
+      justify-content: flex-start;
+    }
+
+    .slide[data-slide="3"] .triple {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .hook-col .iphone-frame {
+      width: 100%;
+      max-width: 110px;
+      height: 240px;
+      border-radius: 22px;
+      margin: 0 auto;
+    }
+
+    .hook-col .iphone-frame::before {
+      width: 46px;
+      height: 15px;
+      border-radius: 0 0 9px 9px;
+    }
+
+    .hook-col .iphone-screen {
+      border-radius: 19px;
+    }
+
+    .hook-label p {
+      font-size: 11px;
+      max-width: 100%;
+    }
+
+    .hook-label .hook-tag {
+      font-size: 9px;
+      letter-spacing: 1px;
+    }
+
+    /* Main phone frame (slide 2) */
+    .iphone-frame {
+      width: 200px;
+      height: 433px;
+    }
+
+    .iphone-frame::before {
+      width: 84px;
+      height: 24px;
+    }
+
+    .iphone-screen {
+      border-radius: 33px;
+    }
+
+    /* Remove internal scroll constraint — slide scrolls instead */
+    .scroll-content {
+      max-height: none;
+      overflow-y: visible;
+      padding-right: 0;
+    }
+
+    .center-content {
+      height: 100%;
+    }
+
+    .subtitle {
+      max-width: 100%;
+    }
+
+    .section-divider {
+      margin: 12px 0 16px;
+    }
+
+    /* Table: horizontal scroll on small screens */
+    .data-table {
+      font-size: 13px;
+      display: block;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 10px 8px;
+      white-space: nowrap;
+    }
+
+    .batch-number {
+      font-size: 32px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -970,11 +1098,15 @@
     if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
   });
 
-  let touchStartX = 0;
-  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+  let touchStartX = 0, touchStartY = 0;
+  document.addEventListener('touchstart', e => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  });
   document.addEventListener('touchend', e => {
-    const diff = touchStartX - e.changedTouches[0].clientX;
-    if (Math.abs(diff) > 50) { go(diff > 0 ? 1 : -1); }
+    const diffX = touchStartX - e.changedTouches[0].clientX;
+    const diffY = touchStartY - e.changedTouches[0].clientY;
+    if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)) { go(diffX > 0 ? 1 : -1); }
   });
 
   show(0);
