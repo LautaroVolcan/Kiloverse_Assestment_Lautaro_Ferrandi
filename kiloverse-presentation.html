@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kiloverse — Video Performance Assignment</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #111111;
+    --bg-card: #1a1a1a;
+    --bg-card-hover: #222222;
+    --text-primary: #ffffff;
+    --text-secondary: #a0a0a0;
+    --text-muted: #666666;
+    --accent-blue: #2D6BFF;
+    --accent-purple: #8a5cf5;
+    --accent-cyan: #00d2d3;
+    --gradient-kure: linear-gradient(135deg, #8a5cf5, #2D6BFF, #00d2d3);
+    --gradient-subtle: linear-gradient(135deg, rgba(138,92,245,0.15), rgba(0,210,211,0.08));
+    --border-subtle: rgba(255,255,255,0.06);
+    --font-display: 'Outfit', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  .deck { width: 100vw; height: 100vh; position: relative; }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 80px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+
+  .slide.active { opacity: 1; pointer-events: all; }
+
+  .badge {
+    position: fixed;
+    top: 28px;
+    right: 36px;
+    background: var(--accent-blue);
+    color: white;
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    padding: 10px 16px;
+    transform: rotate(6deg);
+    line-height: 1.1;
+    text-transform: uppercase;
+    z-index: 100;
+    border-radius: 3px;
+    box-shadow: 0 4px 20px rgba(45,107,255,0.4);
+  }
+
+  .nav-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 36px;
+    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+    z-index: 100;
+  }
+
+  .nav-bar button {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 14px;
+    padding: 10px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    backdrop-filter: blur(10px);
+  }
+
+  .nav-bar button:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.15); }
+  .nav-bar button:disabled { opacity: 0.25; cursor: default; }
+
+  .slide-counter {
+    font-family: var(--font-display);
+    font-size: 13px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+  }
+
+  .progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: var(--gradient-kure);
+    transition: width 0.4s ease;
+    z-index: 101;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(42px, 5vw, 72px);
+    line-height: 1.05;
+    letter-spacing: -1.5px;
+    margin-bottom: 20px;
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(28px, 3.5vw, 48px);
+    line-height: 1.15;
+    letter-spacing: -0.8px;
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(18px, 2vw, 24px);
+    line-height: 1.3;
+    margin-bottom: 12px;
+  }
+
+  p, li {
+    font-size: clamp(15px, 1.4vw, 18px);
+    line-height: 1.65;
+    color: var(--text-secondary);
+  }
+
+  .subtitle {
+    font-size: clamp(16px, 1.6vw, 22px);
+    color: var(--text-secondary);
+    font-weight: 400;
+    line-height: 1.5;
+    max-width: 680px;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: var(--accent-cyan);
+    margin-bottom: 16px;
+  }
+
+  .gradient-text {
+    background: var(--gradient-kure);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+    height: 100%;
+  }
+
+  .split-wide {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 60px;
+    align-items: center;
+    height: 100%;
+  }
+
+  .triple {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+
+  .center-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+    height: 100%;
+  }
+
+  .iphone-frame {
+    width: 240px;
+    height: 520px;
+    background: #1c1c1e;
+    border-radius: 40px;
+    border: 3px solid #333;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05);
+    margin: 0 auto;
+  }
+
+  .iphone-frame::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 28px;
+    background: #1c1c1e;
+    border-radius: 0 0 18px 18px;
+    z-index: 10;
+  }
+
+  .iphone-screen {
+    position: absolute;
+    inset: 3px;
+    border-radius: 37px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: #000;
+  }
+
+  .reel-placeholder {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
+    position: relative;
+  }
+
+  .reel-placeholder .play-icon {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(255,255,255,0.6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+
+  .reel-placeholder .play-icon::after {
+    content: '';
+    width: 0;
+    height: 0;
+    border-left: 18px solid rgba(255,255,255,0.7);
+    border-top: 11px solid transparent;
+    border-bottom: 11px solid transparent;
+    margin-left: 4px;
+  }
+
+  .reel-placeholder .placeholder-text {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    font-family: var(--font-body);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .reel-ui-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 14px 30px;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+  }
+
+  .reel-ui-bottom .reel-username {
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 4px;
+    font-family: var(--font-body);
+  }
+
+  .reel-ui-bottom .reel-caption {
+    font-size: 10px;
+    color: rgba(255,255,255,0.7);
+    font-family: var(--font-body);
+  }
+
+  .reel-ui-right {
+    position: absolute;
+    right: 12px;
+    bottom: 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    align-items: center;
+  }
+
+  .reel-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    padding: 28px;
+    transition: all 0.3s;
+  }
+
+  .card:hover { background: var(--bg-card-hover); border-color: rgba(255,255,255,0.1); }
+  .card h3 { color: var(--text-primary); }
+  .card p { font-size: 14px; line-height: 1.6; }
+
+  .card-accent {
+    border-top: 2px solid;
+    border-image: var(--gradient-kure) 1;
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 15px;
+  }
+
+  .data-table th {
+    text-align: left;
+    padding: 12px 16px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .data-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+  }
+
+  .data-table tr:last-child td { color: #ff4d4f; font-weight: 600; }
+
+  .step {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 28px;
+    align-items: flex-start;
+  }
+
+  .step-num {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 18px;
+    color: white;
+  }
+
+  .step-num.first { background: var(--accent-purple); }
+  .step-num.second { background: var(--accent-blue); }
+  .step-num.third { background: var(--accent-cyan); color: #0a0a0a; }
+
+  .step-content h3 { margin-bottom: 6px; }
+  .step-content p { font-size: 14px; }
+
+  .hook-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .hook-col .iphone-frame {
+    width: 180px;
+    height: 390px;
+    border-radius: 32px;
+  }
+
+  .hook-col .iphone-frame::before {
+    width: 76px;
+    height: 22px;
+    border-radius: 0 0 14px 14px;
+  }
+
+  .hook-col .iphone-screen { border-radius: 29px; }
+
+  .hook-label { text-align: center; }
+
+  .hook-label .hook-tag {
+    font-family: var(--font-display);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+  }
+
+  .hook-label p {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    max-width: 220px;
+    margin: 0 auto;
+  }
+
+  .hook-a .hook-tag { color: var(--accent-purple); }
+  .hook-b .hook-tag { color: var(--accent-blue); }
+  .hook-c .hook-tag { color: var(--accent-cyan); }
+
+  .section-divider {
+    width: 60px;
+    height: 3px;
+    background: var(--gradient-kure);
+    border-radius: 2px;
+    margin: 16px 0 24px;
+  }
+
+  .task-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(45,107,255,0.1);
+    border: 1px solid rgba(45,107,255,0.25);
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent-blue);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+  }
+
+  .scroll-content {
+    max-height: calc(100vh - 160px);
+    overflow-y: auto;
+    padding-right: 20px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+  }
+
+  .scroll-content::-webkit-scrollbar { width: 4px; }
+  .scroll-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+  .batch-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  .batch-number {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 42px;
+    background: var(--gradient-kure);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+
+  .cover-title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(52px, 6vw, 88px);
+    line-height: 1;
+    letter-spacing: -3px;
+  }
+
+  .cover-year {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: 18px;
+    color: var(--text-muted);
+    letter-spacing: 4px;
+    margin-top: 24px;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .slide.active .anim { animation: fadeUp 0.6s ease forwards; }
+  .slide.active .anim-d1 { animation-delay: 0.1s; opacity: 0; }
+  .slide.active .anim-d2 { animation-delay: 0.2s; opacity: 0; }
+  .slide.active .anim-d3 { animation-delay: 0.3s; opacity: 0; }
+  .slide.active .anim-d4 { animation-delay: 0.4s; opacity: 0; }
+  .slide.active .anim-d5 { animation-delay: 0.5s; opacity: 0; }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress"></div>
+<div class="badge">CREATIVE<br>HUB</div>
+
+<div class="deck" id="deck">
+
+  <!-- SLIDE 0: COVER -->
+  <div class="slide active" data-slide="0">
+    <div style="display:flex;flex-direction:column;justify-content:flex-end;height:100%;padding-bottom:60px;">
+      <div class="anim anim-d1"><div class="cover-title">Kiloverse</div></div>
+      <div class="anim anim-d2"><h2 style="font-weight:400;font-size:clamp(24px,3vw,40px);color:var(--text-secondary);letter-spacing:-0.5px;">Video Performance<br>Assignment</h2></div>
+      <div class="anim anim-d3"><div class="cover-year">2026</div></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 1: TASK 1 INTRO -->
+  <div class="slide" data-slide="1">
+    <div class="center-content">
+      <div class="anim anim-d1"><div class="task-badge">Task #1</div></div>
+      <div class="anim anim-d2"><h1>Meta Feed Ad<br><span class="gradient-text">Kure Hypnosis App</span></h1></div>
+      <div class="anim anim-d3"><p class="subtitle">UGC talking head, 9:16 vertical, mobile-optimized. Targeting women 30–55 with a clean, science-backed, and aspirational tone.</p></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: MAIN VIDEO -->
+  <div class="slide" data-slide="2">
+    <div class="split">
+      <div>
+        <div class="anim anim-d1"><div class="tag">Deliverable 1</div></div>
+        <div class="anim anim-d2"><h2>Main Video</h2></div>
+        <div class="anim anim-d3"><div class="section-divider"></div></div>
+        <div class="anim anim-d3"><p style="margin-bottom:20px;">UGC testimonial from a real woman sharing how she and her husband changed their relationship with alcohol using Kure. 15–25 seconds, zoom in/out cuts, dynamic subtitles.</p></div>
+        <div class="anim anim-d4">
+          <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:12px;padding:20px;margin-top:12px;">
+            <p style="font-size:13px;font-style:italic;color:var(--text-muted);line-height:1.7;">
+              "My husband cut back on alcohol by 80% in 10 days. No will power, no shame, just 15 minutes a night before sleep…"
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="anim anim-d3" style="display:flex;justify-content:center;">
+        <div class="iphone-frame">
+          <div class="iphone-screen">
+            <div class="reel-placeholder" style="padding:0;">
+              <img src="LongVideo_thumbnail.png" style="width:100%;height:100%;object-fit:cover;" alt="Main video thumbnail">
+              <div class="reel-ui-right">
+                <div class="reel-icon"></div>
+                <div class="reel-icon"></div>
+                <div class="reel-icon"></div>
+              </div>
+              <div class="reel-ui-bottom">
+                <div class="reel-username">kure.app</div>
+                <div class="reel-caption">Break the cycle. Try Kure free 🌙</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: 3 HOOKS -->
+  <div class="slide" data-slide="3">
+    <div style="display:flex;flex-direction:column;height:100%;justify-content:center;">
+      <div class="anim anim-d1" style="text-align:center;margin-bottom:36px;">
+        <div class="tag">Deliverable 2</div>
+        <h2>3 Hook Variations for A/B Testing</h2>
+      </div>
+      <div class="triple anim anim-d2">
+        <div class="hook-col hook-a">
+          <div class="iphone-frame">
+            <div class="iphone-screen">
+              <div class="reel-placeholder">
+                <img src="LongVideo_thumbnail.png" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" alt="Main video thumbnail">
+                <div class="play-icon"></div>
+                <span class="placeholder-text">Hook A</span>
+                <div class="reel-ui-bottom">
+                  <div class="reel-username">kure.app</div>
+                  <div class="reel-caption">80% less alcohol in 10 days 🔬</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="hook-label">
+            <div class="hook-tag">A — Social Proof</div>
+            <p>"My husband cut back on alcohol by 80% in 10 days."</p>
+          </div>
+        </div>
+        <div class="hook-col hook-b">
+          <div class="iphone-frame">
+            <div class="iphone-screen">
+              <div class="reel-placeholder">
+                 <img src="Hook_2.jpg" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" alt="Main video thumbnail">
+                <div class="play-icon"></div>
+                <span class="placeholder-text">Hook B</span>
+                <div class="reel-ui-bottom">
+                  <div class="reel-username">kure.app</div>
+                  <div class="reel-caption">Break free from the cycle 💜</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="hook-label">
+            <div class="hook-tag">B — Pain Point</div>
+            <p>"If you've been stuck in that drink/regret cycle… this is for you."</p>
+          </div>
+        </div>
+        <div class="hook-col hook-c">
+          <div class="iphone-frame">
+            <div class="iphone-screen">
+              <div class="reel-placeholder">
+                <img src="Hook_3.jpg" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" alt="Main video thumbnail">
+                <div class="play-icon"></div>
+                <span class="placeholder-text">Hook C</span>
+                <div class="reel-ui-bottom">
+                  <div class="reel-username">kure.app</div>
+                  <div class="reel-caption">15 minutes changed everything ✨</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="hook-label">
+            <div class="hook-tag">C — Curiosity</div>
+            <p>"No willpower, no shame. just 15 minutes a night before sleep"</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: WHY THIS FORMAT -->
+  <div class="slide" data-slide="4">
+    <div class="split-wide">
+      <div>
+        <div class="anim anim-d1"><div class="tag">Deliverable 3 — Strategic Rationale</div></div>
+        <div class="anim anim-d2"><h2>Why UGC Talking Head?</h2></div>
+        <div class="anim anim-d3"><div class="section-divider"></div></div>
+        <div class="anim anim-d3" style="margin-bottom:20px;"><p>At $200K/week budget on Reels, the <strong style="color:white;">thumb-stop rate in the first 3 seconds</strong> is the single most important performance driver.</p></div>
+        <div class="anim anim-d4" style="margin-bottom:20px;"><p>A genuine testimonial outperforms a polished, on-brand video that checks every box but feels like advertising.</p></div>
+        <div class="anim anim-d5"><p>The talking head format <strong style="color:white;">builds trust and feels native</strong> in the feed — exactly what a 30–55 female audience needs, as they filter out anything that looks like marketing.</p></div>
+      </div>
+      <div class="anim anim-d3">
+        <div class="card card-accent" style="margin-bottom:16px;">
+          <h3 style="font-size:16px;">👤 Authenticity > Production</h3>
+          <p>A real woman telling her real story. No forced script, no studio, no effects.</p>
+        </div>
+        <div class="card card-accent" style="margin-bottom:16px;">
+          <h3 style="font-size:16px;">📱 Feed-native</h3>
+          <p>Looks like a story or organic reel, not an ad. Passes the scroll filter.</p>
+        </div>
+        <div class="card card-accent">
+          <h3 style="font-size:16px;">⚡ Scalable production</h3>
+          <p>Quick hook swaps, new angles without re-shooting. Ideal for volume at $200K/week.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: BRAND TONE INTEGRATION -->
+  <div class="slide" data-slide="5">
+    <div>
+      <div class="anim anim-d1"><div class="tag">Deliverable 3 — Creative Decisions</div></div>
+      <div class="anim anim-d2"><h2>Folder 10 + Brand Tone Integration</h2></div>
+      <div class="anim anim-d3"><div class="section-divider"></div></div>
+      <div class="anim anim-d3">
+        <p style="margin-bottom:28px;max-width:800px;">Although the testimonial angle is alcohol (not weight/sleep), the mechanism is identical: <strong style="color:white;">cravings → Kure → control</strong>. The authenticity of the delivery outweighs topical precision for performance.</p>
+      </div>
+      <div class="triple anim anim-d4">
+        <div class="card">
+          <h3 style="color:var(--accent-purple);">✦ Clean</h3>
+          <p>Minimalist editing: zoom cuts, clean subtitles, no heavy effects. Direct transitions. Visual breathing room throughout.</p>
+        </div>
+        <div class="card">
+          <h3 style="color:var(--accent-blue);">✦ Science-backed</h3>
+          <p>Subtle text overlay "Clinically-backed hypnotherapy" during the nighttime routine mention. Doesn't force science — integrates it.</p>
+        </div>
+        <div class="card">
+          <h3 style="color:var(--accent-cyan);">✦ Aspirational</h3>
+          <p>The narrative arc goes from problem to transformation: "feeling in control again", "finally feel free". The CTA closes with possibility, not pressure.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: ITERATION PLAN -->
+  <div class="slide" data-slide="6">
+    <div>
+      <div class="anim anim-d1"><div class="tag">Deliverable 3 — Iteration Plan</div></div>
+      <div class="anim anim-d2"><h2>What If Results Are Unsatisfactory?</h2></div>
+      <div class="anim anim-d3"><div class="section-divider"></div></div>
+      <div class="scroll-content">
+        <div class="anim anim-d3">
+          <div class="step">
+            <div class="step-num first">W1</div>
+            <div class="step-content">
+              <h3>Week 1 — Monitor hooks</h3>
+              <p>Compare CTR across the 3 hooks to identify the winning angle. Pause underperformers, scale the winner.</p>
+            </div>
+          </div>
+        </div>
+        <div class="anim anim-d4">
+          <div class="step">
+            <div class="step-num second">W2</div>
+            <div class="step-content">
+              <h3>Week 2 — Refresh or restructure</h3>
+              <p>If CTR drops → produce new hooks keeping the same body. If hold rate is low → shorten the video or restructure the middle section.</p>
+            </div>
+          </div>
+        </div>
+        <div class="anim anim-d5">
+          <div class="step">
+            <div class="step-num third">W3</div>
+            <div class="step-content">
+              <h3>Week 3 — Deep diagnosis</h3>
+              <p>If ROAS doesn't improve, the problem may be post-click (landing page, pricing, funnel). Coordinate with CRO. In parallel, produce new videos with different creators to avoid fatigue with the same face.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: TASK 2 INTRO -->
+  <div class="slide" data-slide="7">
+    <div class="center-content">
+      <div class="anim anim-d1"><div class="task-badge">Task #2</div></div>
+      <div class="anim anim-d2"><h1>Declining Campaign<br><span class="gradient-text">Hair Growth Supplement</span></h1></div>
+      <div class="anim anim-d3"><p class="subtitle">Inherited Meta campaign. $30K/week. Progressive performance drop over 3 weeks. Creative unchanged.</p></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: DIAGNOSIS -->
+  <div class="slide" data-slide="8">
+    <div>
+      <div class="anim anim-d1"><div class="tag">Question 1 — Diagnosis</div></div>
+      <div class="anim anim-d2"><h2>The Numbers Tell a Clear Story</h2></div>
+      <div class="anim anim-d3"><div class="section-divider"></div></div>
+      <div class="anim anim-d3">
+        <table class="data-table">
+          <thead><tr><th>Week</th><th>CTR</th><th>CPC</th><th>ROAS</th></tr></thead>
+          <tbody>
+            <tr><td>Week 1</td><td>3.2%</td><td>$0.91</td><td>4.1</td></tr>
+            <tr><td>Week 2</td><td>2.1%</td><td>$1.40</td><td>2.8</td></tr>
+            <tr><td>Week 3</td><td>1.3%</td><td>$2.10</td><td>1.6</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="anim anim-d4" style="margin-top:28px;">
+        <h3>Diagnosis: <span class="gradient-text">Creative Fatigue</span></h3>
+        <p style="max-width:800px;margin-top:8px;">Creative unchanged, no external factors, and a gradual, consistent decay — the classic pattern of audience saturation. Meta is showing the same ad repeatedly, and each week fewer people engage.</p>
+      </div>
+      <div class="anim anim-d5" style="margin-top:20px;">
+        <p><strong style="color:white;">How to confirm:</strong> Check frequency in Ads Manager (if >3–4 in week 3 = saturation), breakdown by placement, hook rate week-over-week, and landing page CVR to rule out post-click issues.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: ACTION PLAN -->
+  <div class="slide" data-slide="9">
+    <div>
+      <div class="anim anim-d1"><div class="tag">Question 2 — Action Plan</div></div>
+      <div class="anim anim-d2"><h2>Prioritization: Speed → Depth</h2></div>
+      <div class="anim anim-d3"><div class="section-divider"></div></div>
+      <div class="scroll-content">
+        <div class="anim anim-d3">
+          <div class="step">
+            <div class="step-num first">1</div>
+            <div class="step-content">
+              <h3>Refresh the hooks</h3>
+              <p>Immediate impact, low cost. Produce 3–5 new hooks for the same base videos. Only swap the first 3–5 seconds. If CTR recovers to 2.5%+ → the hook was the problem. Execution: 1 day.</p>
+            </div>
+          </div>
+        </div>
+        <div class="anim anim-d4">
+          <div class="step">
+            <div class="step-num second">2</div>
+            <div class="step-content">
+              <h3>New complete creatives</h3>
+              <p>If hooks don't work, the audience recognizes the whole video. 2–3 new videos with different talent, messaging angle, and visual style. Reset the ad perception. Metric: CTR + hold rate. Execution: 1 week.</p>
+            </div>
+          </div>
+        </div>
+        <div class="anim anim-d5">
+          <div class="step">
+            <div class="step-num third">3</div>
+            <div class="step-content">
+              <h3>Audience structure and bidding</h3>
+              <p>If new creatives don't recover ROAS → review whether Meta expanded too broadly (Advantage+), bid cap strategy, landing page and post-click funnel. Metric: ROAS and post-click CVR. Execution: 2+ weeks of testing.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 10: BATCH 1 -->
+  <div class="slide" data-slide="10">
+    <div>
+      <div class="anim anim-d1"><div class="tag">Task — 3 Video Batches</div></div>
+      <div class="anim anim-d2">
+        <div class="batch-header">
+          <div class="batch-number">01</div>
+          <div>
+            <h2 style="margin-bottom:4px;">Hook Swap</h2>
+            <p style="font-size:14px;color:var(--text-muted);">Testing whether fatigue is superficial</p>
+          </div>
+        </div>
+      </div>
+      <div class="anim anim-d3"><div class="section-divider"></div></div>
+      <div class="triple anim anim-d4">
+        <div class="card">
+          <h3 style="color:var(--accent-purple);font-size:14px;">Hook A — Pain</h3>
+          <p>"Still waiting for your hair to grow back?"</p>
+        </div>
+        <div class="card">
+          <h3 style="color:var(--accent-blue);font-size:14px;">Hook B — Curiosity</h3>
+          <p>"The #1 reason your hair supplement isn't working"</p>
+        </div>
+        <div class="card">
+          <h3 style="color:var(--accent-cyan);font-size:14px;">Hook C — Social Proof</h3>
+          <p>"I tried everything for my hair — this is the only thing that actually worked"</p>
+        </div>
+      </div>
+      <div class="anim anim-d5" style="margin-top:28px;">
+        <div class="card card-accent">
+          <p><strong style="color:white;">Format:</strong> Same base video, only first 3–5 sec replaced &nbsp;·&nbsp; <strong style="color:white;">Metric:</strong> CTR → target 2.5%+ in 5 days &nbsp;·&nbsp; <strong style="color:white;">If it works:</strong> confirms superficial fatigue</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 11: BATCH 2 -->
+  <div class="slide" data-slide="11">
+    <div>
+      <div class="anim anim-d1"><div class="tag">Task — 3 Video Batches</div></div>
+      <div class="anim anim-d2">
+        <div class="batch-header">
+          <div class="batch-number">02</div>
+          <div>
+            <h2 style="margin-bottom:4px;">New Creatives</h2>
+            <p style="font-size:14px;color:var(--text-muted);">Testing whether fatigue runs deep</p>
+          </div>
+        </div>
+      </div>
+      <div class="anim anim-d3"><div class="section-divider"></div></div>
+      <div class="triple anim anim-d4">
+        <div class="card">
+          <h3 style="font-size:14px;">Video 1 — Testimonial</h3>
+          <p>New creator. Emotional before/after, not just visual. UGC talking head + b-roll.</p>
+        </div>
+        <div class="card">
+          <h3 style="font-size:14px;">Video 2 — Routine</h3>
+          <p>"My nighttime hair growth routine in 30 seconds." Process format, visual step-by-step.</p>
+        </div>
+        <div class="card">
+          <h3 style="font-size:14px;">Video 3 — Myth-busting</h3>
+          <p>"3 things your dermatologist won't tell you about hair growth." Educational, high engagement.</p>
+        </div>
+      </div>
+      <div class="anim anim-d5" style="margin-top:28px;">
+        <div class="card card-accent">
+          <p><strong style="color:white;">Format:</strong> UGC talking head + new creator + b-roll · 15–20 sec &nbsp;·&nbsp; <strong style="color:white;">Metric:</strong> CTR + ThruPlay rate &nbsp;·&nbsp; <strong style="color:white;">If high CTR but low ThruPlay:</strong> hook works but body doesn't retain</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 12: BATCH 3 -->
+  <div class="slide" data-slide="12">
+    <div>
+      <div class="anim anim-d1"><div class="tag">Task — 3 Video Batches</div></div>
+      <div class="anim anim-d2">
+        <div class="batch-header">
+          <div class="batch-number">03</div>
+          <div>
+            <h2 style="margin-bottom:4px;">Different Format</h2>
+            <p style="font-size:14px;color:var(--text-muted);">Testing whether the audience needs a total stimulus change</p>
+          </div>
+        </div>
+      </div>
+      <div class="anim anim-d3"><div class="section-divider"></div></div>
+      <div class="triple anim anim-d4">
+        <div class="card">
+          <h3 style="font-size:14px;">Video 1 — Slideshow</h3>
+          <p>"5 signs your hair is thinning." No face, just text + images. Fast, informative, breaks the UGC pattern.</p>
+        </div>
+        <div class="card">
+          <h3 style="font-size:14px;">Video 2 — Screen Recording</h3>
+          <p>"Look what I found" style — showing the app, reviews, on-screen results. Native, curiosity-driven.</p>
+        </div>
+        <div class="card">
+          <h3 style="font-size:14px;">Video 3 — Split Screen</h3>
+          <p>Before/after with voice over and music. Visual, aspirational, immediate impact without a talking head.</p>
+        </div>
+      </div>
+      <div class="anim anim-d5" style="margin-top:28px;">
+        <div class="card card-accent">
+          <p><strong style="color:white;">Format:</strong> Non-UGC mix to break the pattern &nbsp;·&nbsp; <strong style="color:white;">Metric:</strong> ROAS as the final metric &nbsp;·&nbsp; <strong style="color:white;">If non-UGC outperforms:</strong> the audience was fatigued by the format itself → diversify permanently</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 13: THANK YOU -->
+  <div class="slide" data-slide="13">
+    <div class="center-content">
+      <div class="anim anim-d1"><div style="width:80px;height:3px;background:var(--gradient-kure);border-radius:2px;margin:0 auto 32px;"></div></div>
+      <div class="anim anim-d2"><h1>Thank You!</h1></div>
+      <div class="anim anim-d3"><p class="subtitle" style="margin:0 auto;">Ready for feedback and next steps.</p></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- NAVIGATION -->
+<div class="nav-bar">
+  <button id="prevBtn" disabled onclick="go(-1)">← Prev</button>
+  <span class="slide-counter" id="counter">1 / 14</span>
+  <button id="nextBtn" onclick="go(1)">Next →</button>
+</div>
+
+<script>
+  let current = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  const progress = document.getElementById('progress');
+  const counter = document.getElementById('counter');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+
+  function show(idx) {
+    slides.forEach(s => s.classList.remove('active'));
+    slides[idx].classList.add('active');
+    progress.style.width = ((idx / (total - 1)) * 100) + '%';
+    counter.textContent = (idx + 1) + ' / ' + total;
+    prevBtn.disabled = idx === 0;
+    nextBtn.disabled = idx === total - 1;
+  }
+
+  function go(dir) {
+    const next = current + dir;
+    if (next >= 0 && next < total) { current = next; show(current); }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); go(1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+  });
+
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend', e => {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) { go(diff > 0 ? 1 : -1); }
+  });
+
+  show(0);
+</script>
+</body>
+</html>
